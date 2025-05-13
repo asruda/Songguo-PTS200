@@ -154,6 +154,11 @@ bool MSC_Updating_Flag = false;
 // Button2 Obj
 Button2 btn;
 
+// Button configuration
+uint8_t BUTTON_PIN = DEFAULT_BUTTON_PIN;
+uint8_t BUTTON_P_PIN = DEFAULT_BUTTON_P_PIN;
+uint8_t BUTTON_N_PIN = DEFAULT_BUTTON_N_PIN;
+
 float limit = 0.0;
 
 void setup() {
@@ -841,6 +846,9 @@ void SetupScreen() {
         }
         repeat = false;
       } break;
+      case 12: {
+        ButtonSettingsScreen();
+      } break;      
       default:
         repeat = false;
         break;
@@ -934,6 +942,76 @@ void TimerScreen() {
         repeat = false;
         break;
     }
+  }
+}
+
+// Button settings screen 按键设置
+void ButtonSettingsScreen() {
+  delay(500);
+  uint8_t button_pin, button_p_pin, button_n_pin;
+  uint8_t pins[3] = {0};
+  bool valid = false;
+  
+  for (uint8_t i = 0; i < sizeof(ButtonSettingItems)/sizeof(ButtonSettingItems[0]); i++) {
+    valid = false;
+    while(!valid) {
+      u8g2.firstPage();
+      do {
+        u8g2.setFont(PTS200_16);
+        if(language == 2) {
+          u8g2.setFont(u8g2_font_unifont_t_chinese3);
+        }
+        u8g2.setFontPosTop();
+        u8g2.drawUTF8(0, 0 + SCREEN_OFFSET, txt_press_button[language]);
+        u8g2.setCursor(2, 16 + SCREEN_OFFSET);
+        u8g2.print(ButtonSettingItems[i][language]);
+        // u8g2.drawUTF8(0, 32, ("d: "+String(EEPROM.readUChar(ADDR_BUTTON_PIN))+", "+String(EEPROM.readUChar(ADDR_BUTTON_P_PIN))).c_str());
+        // u8g2.drawUTF8(0, 48, ("debug: "+String(EEPROM.readUChar(ADDR_BUTTON_N_PIN))).c_str());
+      } while (u8g2.nextPage());
+      
+      // Wait for button press
+      uint8_t pressedPin = 255;
+      while(pressedPin == 255) {
+        if(!digitalRead(DEFAULT_BUTTON_PIN)) pressedPin = DEFAULT_BUTTON_PIN;
+        else if(!digitalRead(DEFAULT_BUTTON_P_PIN)) pressedPin = DEFAULT_BUTTON_P_PIN;
+        else if(!digitalRead(DEFAULT_BUTTON_N_PIN)) pressedPin = DEFAULT_BUTTON_N_PIN;
+        delay(10);
+      }
+      
+      // Check for duplicate
+      bool duplicate = false;
+      for(uint8_t j=0; j<i; j++) {
+        if(pins[j] == pressedPin) {
+          duplicate = true;
+          break;
+        }
+      }
+      
+      u8g2.setCursor(2, 32 + SCREEN_OFFSET);
+      if(duplicate) {
+        beep(); beep(); // Double beep for duplicate
+        u8g2.print(txt_duplicate_button[language]);
+      } else {
+        pins[i] = pressedPin;
+        beep(); // Single beep for success
+        valid = true;
+        u8g2.print("OK");
+      }
+
+      u8g2.sendBuffer();
+      delay(500);
+    }
+  }
+  
+  button_n_pin = pins[0];
+  button_p_pin = pins[1];
+  button_pin = pins[2];
+
+  if (MenuScreen(StoreItems, sizeof(StoreItems), 0)) {
+    // 生效配置
+    applyButtonSettings(button_pin, button_p_pin, button_n_pin);
+    // 写入按键设置到EEPROM
+    update_button_EEPROM();
   }
 }
 
@@ -1638,4 +1716,10 @@ void heatWithLimit() {
   ledcWrite(
       CONTROL_CHANNEL,
       constrain(HEATER_PWM, 0, limit));  // turn on again heater 再次打开加热器
+}
+
+static void applyButtonSettings(uint8_t &button_pin, uint8_t &button_p_pin , uint8_t &button_n_pin) {
+  BUTTON_PIN = button_pin;
+  BUTTON_P_PIN = button_p_pin;
+  BUTTON_N_PIN = button_n_pin;
 }

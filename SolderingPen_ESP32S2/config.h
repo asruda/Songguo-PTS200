@@ -19,9 +19,9 @@
 #define SENSOR_PIN        1     // tip temperature sense 烙铁头温感
 #define VIN_PIN           6     // input voltage sense 检测输入电压
 #define BUZZER_PIN        3     // buzzer 蜂鸣器
-#define BUTTON_PIN        0     // switch 按键right
-#define BUTTON_P_PIN      4     // 1 键位为“+”
-#define BUTTON_N_PIN      2     // 2 键位为“-”
+#define DEFAULT_BUTTON_PIN        0     // switch 按键right
+#define DEFAULT_BUTTON_P_PIN      4     // 1 键位为“+” 
+#define DEFAULT_BUTTON_N_PIN      2     // 2 键位为“-”
 #define CONTROL_PIN       5     // heater MOSFET PWM control 加热器MOSFET PWM控制
 #define CONTROL_CHANNEL   2     // PWM channel
 #define CONTROL_FREQ      200   // PWM frequency

@@ -21,8 +21,11 @@
 
 #define ADDR_LANGUAGE ADDR_CAL_TEMP + 2 * CALNUM *TIPMAX
 #define ADDR_HAND_SIDE ADDR_LANGUAGE + 1
+#define ADDR_BUTTON_PIN ADDR_HAND_SIDE + 1
+#define ADDR_BUTTON_P_PIN ADDR_BUTTON_PIN + 1
+#define ADDR_BUTTON_N_PIN ADDR_BUTTON_P_PIN + 1
 
-#define ADDR_EEPROM_SIZE ADDR_HAND_SIDE + 1
+#define ADDR_EEPROM_SIZE ADDR_BUTTON_N_PIN + 1
 
 bool system_init_flag = false;
 
@@ -46,6 +49,11 @@ extern uint16_t CalTemp[TIPMAX][CALNUM];
 
 extern uint8_t language;
 extern uint8_t hand_side;
+extern uint8_t BUTTON_PIN;
+extern uint8_t BUTTON_P_PIN;
+extern uint8_t BUTTON_N_PIN;
+
+static uint8_t safeReadButton(uint16_t addr, uint8_t defaultValue);
 
 bool write_default_EEPROM()
 {
@@ -83,6 +91,9 @@ bool write_default_EEPROM()
 
   EEPROM.writeUChar(ADDR_LANGUAGE, DEFAULT_LANGUAGE);
   EEPROM.writeUChar(ADDR_HAND_SIDE, DEFAULT_HAND_SIDE);
+  EEPROM.writeUChar(ADDR_BUTTON_PIN, DEFAULT_BUTTON_PIN);
+  EEPROM.writeUChar(ADDR_BUTTON_P_PIN, DEFAULT_BUTTON_P_PIN);
+  EEPROM.writeUChar(ADDR_BUTTON_N_PIN, DEFAULT_BUTTON_N_PIN);
 
   EEPROM.writeUInt(ADDR_SYSTEM_INIT_FLAG, VERSION_NUM);
 
@@ -143,6 +154,9 @@ bool update_EEPROM()
 
   EEPROM.writeUChar(ADDR_LANGUAGE, language);
   EEPROM.writeUChar(ADDR_HAND_SIDE, hand_side);
+  EEPROM.writeUChar(ADDR_BUTTON_PIN, BUTTON_PIN);
+  EEPROM.writeUChar(ADDR_BUTTON_P_PIN, BUTTON_P_PIN);
+  EEPROM.writeUChar(ADDR_BUTTON_N_PIN, BUTTON_N_PIN);
 
   EEPROM.writeUInt(ADDR_SYSTEM_INIT_FLAG, VERSION_NUM);
 
@@ -201,6 +215,9 @@ bool read_EEPROM()
 
   language = EEPROM.readUChar(ADDR_LANGUAGE);
   hand_side = EEPROM.readUChar(ADDR_HAND_SIDE);
+  BUTTON_PIN = safeReadButton(ADDR_BUTTON_PIN, DEFAULT_BUTTON_PIN);
+  BUTTON_P_PIN = safeReadButton(ADDR_BUTTON_P_PIN, DEFAULT_BUTTON_P_PIN);
+  BUTTON_N_PIN = safeReadButton(ADDR_BUTTON_N_PIN, DEFAULT_BUTTON_N_PIN);
 
   return true;
 }
@@ -221,4 +238,34 @@ bool update_default_temp_EEPROM()
     Serial.println("Default temp Update Failed");
     return false;
   }
+}
+
+bool update_button_EEPROM()
+{
+  String desc = "Default Button";
+  Serial.println("Updating "+ desc + " in EEPROM");
+  EEPROM.writeUChar(ADDR_BUTTON_PIN, BUTTON_PIN);
+  EEPROM.writeUChar(ADDR_BUTTON_P_PIN, BUTTON_P_PIN);
+  EEPROM.writeUChar(ADDR_BUTTON_N_PIN, BUTTON_N_PIN);
+
+  if (EEPROM.commit())
+  {
+    Serial.println(desc + " Update Done");
+    return true;
+  }
+  else
+  {
+    Serial.println(desc + " Update Failed");
+    return false;
+  }
+}
+
+static uint8_t safeReadButton(uint16_t addr, uint8_t defaultValue) {
+  uint8_t val = EEPROM.readUChar(addr);
+  // 检查是否为未初始化值（0xFF）
+  return (val == 0xFF || 
+    (val != DEFAULT_BUTTON_PIN && 
+     val != DEFAULT_BUTTON_P_PIN && 
+     val != DEFAULT_BUTTON_N_PIN)) 
+    ? defaultValue : val;
 }

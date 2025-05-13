@@ -3,7 +3,7 @@ const uint8_t language_types = 3;
 //                                            "温控类型",   "溫控類型",   "Control Type",
 
 const char *SetupItems[][language_types] = { "菜单设置", "菜單設置", "Setup Menu",
-                                             "烙铁头设置", "烙鐵頭設置", "Tip Settings",
+                                             "烙铁头设置", "烙鐵頭設置", "Tip Settings", 
                                              "温度设置", "溫度設置", "Temp Settings",
                                              "时间设置", "時間設置", "Timer Settings",
                                              "主屏幕", "主屏幕", "Main Screen",
@@ -15,11 +15,17 @@ const char *SetupItems[][language_types] = { "菜单设置", "菜單設置", "Se
                                              "更新版本", "更新版本", "Update Firmware",
                                              "Languages", "Languages", "Languages",
                                              "切换左右手", "切换左右手", "L/R Hand",
+                                             "重设Button", "重設Button", "Remap Buttons",
                                              "返回", "返回", "Return" };
 const char *LanguagesItems[][language_types] = { "Languages", "Languages", "Languages",
                                                  "简体中文", "简体中文", "zh-CN",
                                                  "繁体中文", "繁体中文", "zh-TW",
                                                  "English", "English", "English" };
+const char *ButtonSettingItems[][language_types] = { 
+                                            "+ Button:", "+ Button:", "Plus Btn:", 
+                                            "- Button:", "- Button:", "Minus Btn:",
+                                            "确认 Button:", "確認 Button:", "Confirm Btn:",
+                                            };                                          
 const char *TipItems[][language_types] = { "烙铁头:", "烙鐵頭:", "Tip:",
                                            "更换烙铁头", "更換烙鐵頭", "Change Tip",
                                            "校准烙铁头", "校準烙鐵頭", "Calibrate Tip",
@@ -121,3 +127,5 @@ const char *txt_temp_2[] = { "温度：  ", "溫度：  ", "Temp:  " };
 const char *txt_wait_pls[] = { "请稍等...", "請稍等...", "Please wait ..." };
 
 const char *txt_enter_tip_name[] = { "输入烙铁头名称", "輸入烙鐵頭名稱", "Enter Tip Name" };
+const char *txt_press_button[] = { "重设Button", "重設Button", "Set Button" };
+const char *txt_duplicate_button[] = { "重复!", "重復!", "Duplicated!" };
