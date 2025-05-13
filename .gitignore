@@ -6,5 +6,6 @@
 .vscode
 .DS_Store
 .idea
+.clang-format
 SolderingPen_ESP32S2/build
 SolderingPen_ESP32S2/.idea

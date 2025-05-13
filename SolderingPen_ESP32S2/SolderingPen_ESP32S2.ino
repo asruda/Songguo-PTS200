@@ -155,6 +155,7 @@ bool MSC_Updating_Flag = false;
 Button2 btn;
 
 // Button configuration
+uint8_t BUTTON_MENU_SELECTED = 0;
 uint8_t BUTTON_PIN = DEFAULT_BUTTON_PIN;
 uint8_t BUTTON_P_PIN = DEFAULT_BUTTON_P_PIN;
 uint8_t BUTTON_N_PIN = DEFAULT_BUTTON_N_PIN;
@@ -847,8 +848,13 @@ void SetupScreen() {
         repeat = false;
       } break;
       case 12: {
-        ButtonSettingsScreen();
-      } break;      
+        BUTTON_MENU_SELECTED = MenuScreen(ButtonMenuItems, sizeof(ButtonMenuItems), 0);
+        if (BUTTON_MENU_SELECTED == 0) {
+          ButtonViewScreen();
+        } else if (BUTTON_MENU_SELECTED == 1) {
+          ButtonRemapScreen();
+        }
+      } break;
       default:
         repeat = false;
         break;
@@ -945,14 +951,45 @@ void TimerScreen() {
   }
 }
 
-// Button settings screen 按键设置
-void ButtonSettingsScreen() {
+// Button View Screen 查看按键配置
+void ButtonViewScreen() {
+  bool lastbutton = (!digitalRead(BUTTON_PIN));
+  do {
+    u8g2.firstPage();
+    do {
+      u8g2.setFont(PTS200_16);
+      if(language == 2) {
+        u8g2.setFont(u8g2_font_unifont_t_chinese3);
+      }
+      u8g2.setFontPosTop();
+      if (sizeof(ButtonRemapItems)/sizeof(ButtonRemapItems[0]) < 3) {
+        return;
+      }
+      // 使用映射配置转换引脚显示值
+      uint8_t display_n_pin = getButtonMappedPin(BUTTON_N_PIN);
+      uint8_t display_p_pin = getButtonMappedPin(BUTTON_P_PIN);
+      uint8_t display_pin = getButtonMappedPin(BUTTON_PIN);
+      
+      u8g2.drawUTF8(0, 0 + SCREEN_OFFSET, (ButtonRemapItems[0][language] + String(display_n_pin)).c_str());
+      u8g2.drawUTF8(0, 16 + SCREEN_OFFSET, (ButtonRemapItems[1][language] + String(display_p_pin)).c_str());
+      u8g2.drawUTF8(0, 32 + SCREEN_OFFSET, (ButtonRemapItems[2][language] + String(display_pin)).c_str());
+    } while (u8g2.nextPage());
+    if (lastbutton && digitalRead(BUTTON_PIN)) {
+      delay(10);
+      lastbutton = false;
+    }
+  } while (digitalRead(BUTTON_PIN) || lastbutton);
+  beep();
+}
+
+// Button Remap screen 按键设置
+void ButtonRemapScreen() {
   delay(500);
   uint8_t button_pin, button_p_pin, button_n_pin;
   uint8_t pins[3] = {0};
   bool valid = false;
   
-  for (uint8_t i = 0; i < sizeof(ButtonSettingItems)/sizeof(ButtonSettingItems[0]); i++) {
+  for (uint8_t i = 0; i < sizeof(ButtonRemapItems)/sizeof(ButtonRemapItems[0]); i++) {
     valid = false;
     while(!valid) {
       u8g2.firstPage();
@@ -964,7 +1001,7 @@ void ButtonSettingsScreen() {
         u8g2.setFontPosTop();
         u8g2.drawUTF8(0, 0 + SCREEN_OFFSET, txt_press_button[language]);
         u8g2.setCursor(2, 16 + SCREEN_OFFSET);
-        u8g2.print(ButtonSettingItems[i][language]);
+        u8g2.print(ButtonRemapItems[i][language]);
         // u8g2.drawUTF8(0, 32, ("d: "+String(EEPROM.readUChar(ADDR_BUTTON_PIN))+", "+String(EEPROM.readUChar(ADDR_BUTTON_P_PIN))).c_str());
         // u8g2.drawUTF8(0, 48, ("debug: "+String(EEPROM.readUChar(ADDR_BUTTON_N_PIN))).c_str());
       } while (u8g2.nextPage());
@@ -1682,6 +1719,16 @@ static void usbEventCallback(void *arg, esp_event_base_t event_base,
 }
 
 void turnOffHeater(Button2 &b) { inOffMode = true; }
+
+// 获取映射后的引脚值
+uint8_t getButtonMappedPin(uint8_t originalPin) {
+  for(uint8_t i = 0; i < BUTTON_MAP_SIZE; i++) {
+    if(originalPin == BUTTON_PIN_MAPPING[i][0]) {
+      return BUTTON_PIN_MAPPING[i][1];
+    }
+  }
+  return originalPin; // 如果没有找到映射，返回原值
+}
 
 // uint16_t calibrate_adc(adc_unit_t adc, adc_atten_t channel) {
 //   uint16_t vref;
